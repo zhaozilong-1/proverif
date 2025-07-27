@@ -3,34 +3,27 @@ type skey.
 free IDi,IDq,regroup,NIDj:bitstring[private].
 free x:bitstring.
 free c:channel.
-(* 定义函数 *)
 fun mul(bitstring, bitstring): bitstring.
 const g:point.
-(* 椭圆曲线点乘 *)
 fun EC_Mul(bitstring, point): point.
 equation 
 forall a:bitstring,b:bitstring;
 EC_Mul(a,EC_Mul(b,g))=EC_Mul(b,EC_Mul(a,g)).
-(* 连 接 *)
 fun concat(bitstring, bitstring): bitstring. 
 fun deconcat(bitstring):bitstring.
-(* 划分 *)
 fun split(bitstring):bitstring.
-(* 异或 *)
 fun xor(bitstring, bitstring) : bitstring.
 fun H(bitstring):bitstring.
 fun Enc(bitstring,skey):bitstring.
 reduc forall m:bitstring, k:skey; Dec(Enc(m,k),k) = m.
-(* 混沌映射定义 *)
 fun T(bitstring, bitstring): bitstring.
-(*类型转换*)
 fun point2str(point):bitstring [typeConverter].
 fun str2point(bitstring):point [typeConverter].
 fun str2key(bitstring):skey [typeConverter].
 fun key2str(skey):bitstring [typeConverter].
 fun point2key(point):skey [typeConverter].
 
-(*询问*)
+
 query attacker(IDi).
 query attacker(IDq).
 query attacker(regroup).
@@ -56,10 +49,10 @@ let user(ri:bitstring,Tqx:bitstring,si:skey)=
     let Kqi_ = T(key2str(si),trqx) in
     let Dkqi_ =Dec(Cq,str2key(Kqi_)) in
     let Trqx  = deconcat(Dkqi_) in 
-    (*证书cert_存储*)
+    
     let cert_ = T(ri,trqx) in
     let MACq_ = H(concat(concat(concat(Cq,H(Kqi_)),cert_),T2)) in
-    (*创建组*)
+    
     in(c,Cqi:bitstring);
     let bi_ = deconcat(Dec(Cqi,str2key(H(cert_)))) in
     new T4:bitstring;
@@ -74,25 +67,25 @@ let qkcs(q:skey,rq:bitstring,Tsix:bitstring,db:skey,GKqk:skey)=
     let MAC_ = H(concat(concat(concat(Ci,H(Kiq_)),Trix),T1)) in
     let Kqi = T(rq,Tsix) in
     let trqx = T(rq,x) in
-    (*证书cert存储*)
+    
     let cert = T(rq,trix) in
     let Cq = Enc(concat(IDi,IDq),str2key(trqx)) in
     new T2:bitstring;
     let MACq = H(concat(concat(concat(Cq,H(Kqi)),cert),T2)) in
     out(c,(Cq,trqx,MACq,T2));
-    (*上传证书cert到区块链*)
+   
     let HIDi = H(concat(concat(IDi,IDq),H(cert))) in
     let HSKi = H(cert) in
     new T3:bitstring;
     let Cbi = Enc(concat(concat(HIDi,HSKi),T3),db) in
     out(c,Cbi);
-    (*获取临时密钥*)
+  
     in(c,(Ckeybq:bitstring,CGIDbq:bitstring,MACbq:bitstring));
     let skbq_ = xor(HSKi,H(concat(cert,HSKi))) in 
     let tkey_qkcs = xor(skbq_,Ckeybq) in
     let GID_qkcs = xor(tkey_qkcs,CGIDbq) in 
     let MACbq_ = xor(skbq_,deconcat(tkey_qkcs)) in
-    (*传输量子密钥*)
+   
     let Cgk = concat(concat(xor(key2str(GKqk),tkey_qkcs),GID_qkcs),H(concat(key2str(GKqk),GID_qkcs))) in
     out(c,Cgk).
 
@@ -106,7 +99,7 @@ let BS(db:skey,bi:bitstring,tgk:skey,Di:point,rb:bitstring)=
     out(c,Cqi);
     in(c,EUi:bitstring);
     let cert = Dec(EUi,str2key(H(concat(HSKi_,bi)))) in 
-    (*传输临时组密钥=>node*)
+    
     let Rb = EC_Mul(rb,g) in
     let MACbj = H(concat(point2str(Rb),NIDj)) in
     out(c,(Rb,MACbj));
@@ -121,7 +114,7 @@ let BS(db:skey,bi:bitstring,tgk:skey,Di:point,rb:bitstring)=
         let CGIDj = xor(key2str(tgk),GIDjk) in 
         let MACj = xor(skmacj,split(key2str(tgk))) in
         out(c,(Ckeyj,CGIDj,MACj));
-    (*传输临时组密钥=>qkcs*)
+   
         let skbq = xor(HSKi_,H(concat(cert,HSKi_))) in 
         let Ckeybq = concat(xor(skbq,key2str(tgk)),HIDi_) in
         let CGIDbq = xor(key2str(tgk),GIDjk) in 
@@ -146,7 +139,6 @@ let node(di:skey,Db:point,rj:bitstring)=
         let tkey_node =xor(xor(skencj_,Ckeyj),CNIDj) in
         let GID_node = xor(tkey_node,CGIDj) in
         let MACj_ = xor(skmacj_,split(tkey_node)) in
-    (*获取量子密钥*)
         in(c,Cgk:bitstring);
         let GID_node_ = deconcat(Cgk) in
         let Ctemnode = deconcat(Cgk) in
